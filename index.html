@@ -12,7 +12,6 @@
     --dark: #1E2A38;
     --dark-2: #16202B;
     --bubble-me: #FF6B4A;
-    --bubble-other: #2C3B4C;
     --text-light: #E8ECEF;
   }
   * { box-sizing: border-box; }
@@ -39,51 +38,86 @@
     width: 340px; height: 460px; display:none; flex-direction:column;
     background: var(--dark); border-radius: 14px; overflow:hidden;
     box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    transition: all .2s ease;
   }
   #lc-panel.open{ display:flex; }
+  #lc-panel.fullscreen{
+    right:0; bottom:0; top:0; left:0; width:100%; height:100%; border-radius:0;
+  }
 
   #lc-header{
     padding: 12px 16px; background: var(--dark-2); color: var(--text-light);
     display:flex; align-items:center; justify-content:space-between;
-    font-weight:600; font-size:14px;
+    font-weight:600; font-size:14px; flex-shrink:0;
   }
   #lc-header .lc-status{ display:flex; align-items:center; gap:6px; }
   #lc-header .lc-dot{ width:8px; height:8px; border-radius:50%; background:#4ADE80; }
+  #lc-header .lc-header-btns{ display:flex; gap:4px; }
   #lc-header button{
     background:none; border:none; color:var(--text-light); opacity:.7;
-    cursor:pointer; font-size:18px; line-height:1; padding:2px 6px;
+    cursor:pointer; font-size:16px; line-height:1; padding:4px 6px;
   }
   #lc-header button:hover{ opacity:1; }
 
   #lc-messages{
-    flex:1; overflow-y:auto; padding: 14px; display:flex; flex-direction:column; gap:8px;
+    flex:1; overflow-y:auto; padding: 14px; display:flex; flex-direction:column; gap:10px;
+    background-size: cover; background-position:center;
   }
   #lc-messages:empty::after{
     content: 'Abhi tak koi message nahi. Sab se pehle aap likhein.';
-    color: rgba(255,255,255,0.4); font-size:12px; text-align:center; display:block; margin-top:20px;
+    color: rgba(255,255,255,0.6); font-size:12px; text-align:center; display:block; margin-top:20px;
   }
-  .lc-msg{
-    max-width: 78%; padding: 8px 12px; border-radius: 14px; font-size:13px; line-height:1.4;
-    word-break: break-word; align-self: flex-start;
-  }
-  .lc-msg.me{ align-self:flex-end; background: var(--bubble-me); color: var(--accent-ink); border-bottom-right-radius:4px; }
-  .lc-msg.other{ background: var(--bubble-other); color: var(--text-light); border-bottom-left-radius:4px; }
-  .lc-msg .lc-name{ display:block; font-size:10px; font-weight:600; opacity:.7; margin-bottom:2px; }
-  .lc-msg .lc-time{ display:block; font-size:9px; opacity:.5; margin-top:3px; text-align:right; }
+  .lc-msg-wrap{ display:flex; flex-direction:column; max-width:80%; }
+  .lc-msg-wrap.me{ align-self:flex-end; align-items:flex-end; }
+  .lc-msg-wrap.other{ align-self:flex-start; align-items:flex-start; }
 
+  .lc-msg{
+    padding: 8px 12px; border-radius: 14px; font-size:13px; line-height:1.4;
+    word-break: break-word; cursor:pointer; position:relative;
+  }
+  .lc-msg.me{ background: var(--bubble-me); color: var(--accent-ink); border-bottom-right-radius:4px; }
+  .lc-msg.other{ color: #14202b; border-bottom-left-radius:4px; }
+  .lc-msg .lc-name{ display:block; font-size:10px; font-weight:600; opacity:.75; margin-bottom:2px; }
+  .lc-msg .lc-mention{ font-weight:700; text-decoration:underline; }
+  .lc-msg img.lc-img{ max-width:180px; border-radius:8px; display:block; margin-top:4px; }
+
+  .lc-meta-row{ display:flex; align-items:center; gap:8px; margin-top:2px; font-size:10px; opacity:.6; color: var(--text-light); }
+  .lc-meta-row .lc-like-btn{ cursor:pointer; background:none; border:none; color:inherit; font-size:11px; padding:0; }
+  .lc-meta-row .lc-like-btn.liked{ color:#FF6B4A; }
+  .lc-meta-row .lc-del-btn{ cursor:pointer; background:none; border:none; color:inherit; font-size:10px; padding:0; text-decoration:underline; }
+
+  #lc-suggest{
+    position:absolute; bottom:100%; left:10px; right:10px; background:#2C3B4C; border-radius:8px;
+    margin-bottom:6px; max-height:120px; overflow-y:auto; display:none; box-shadow:0 4px 12px rgba(0,0,0,.4);
+  }
+  #lc-suggest div{ padding:7px 12px; font-size:13px; color:var(--text-light); cursor:pointer; }
+  #lc-suggest div:hover{ background:#3A4C60; }
+
+  #lc-form-wrap{ position:relative; background: var(--dark-2); flex-shrink:0; }
+  #lc-image-row{ display:none; padding: 8px 10px 0; gap:6px; }
+  #lc-image-row input{
+    flex:1; border-radius:8px; border:none; padding:7px 10px; font-size:12px;
+    background:#2C3B4C; color:var(--text-light);
+  }
+  #lc-image-row button{
+    background: var(--accent); color:var(--accent-ink); border:none; border-radius:8px;
+    padding:0 10px; font-size:12px; font-weight:600; cursor:pointer;
+  }
   #lc-form{
-    padding: 10px; background: var(--dark-2); display:flex; gap:8px; align-items:flex-end;
+    padding: 10px; display:flex; gap:8px; align-items:flex-end;
   }
   #lc-form input[type=text]{
     flex:1; border-radius:20px; border:none; padding:9px 14px;
     font-family:'Inter',sans-serif; font-size:13px; background:#2C3B4C; color:var(--text-light);
   }
   #lc-form input[type=text]::placeholder{ color:rgba(255,255,255,0.4); }
-  #lc-form button.lc-send{
+  #lc-form button{
     background: var(--accent); color:var(--accent-ink); border:none; border-radius:50%;
     width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
-  #lc-form button.lc-send:hover{ filter:brightness(1.05); }
+  #lc-form button:hover{ filter:brightness(1.05); }
+  #lc-form button.lc-img-toggle{ background:#2C3B4C; color:var(--text-light); }
+
   #lc-name-gate{
     padding: 16px; background: var(--dark); display:flex; flex-direction:column; gap:10px;
     flex:1; align-items:center; justify-content:center;
@@ -109,7 +143,10 @@
 <div id="lc-panel">
   <div id="lc-header">
     <span class="lc-status"><span class="lc-dot"></span> Live chat</span>
-    <button id="lc-close" aria-label="Band karein">&times;</button>
+    <div class="lc-header-btns">
+      <button id="lc-fullscreen" aria-label="Fullscreen" title="Fullscreen">⛶</button>
+      <button id="lc-close" aria-label="Band karein">&times;</button>
+    </div>
   </div>
 
   <div id="lc-name-gate">
@@ -119,23 +156,31 @@
   </div>
 
   <div id="lc-messages" style="display:none;"></div>
-  <div id="lc-form" style="display:none;">
-    <input type="text" id="lc-text-input" maxlength="300" placeholder="Message likhein...">
-    <button class="lc-send" id="lc-send-btn" aria-label="Bhejein">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4A1B0C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-    </button>
+
+  <div id="lc-form-wrap" style="display:none;">
+    <div id="lc-suggest"></div>
+    <div id="lc-image-row">
+      <input type="text" id="lc-image-input" placeholder="Image ya GIF ka link paste karein...">
+      <button id="lc-image-send">Bhejein</button>
+    </div>
+    <div id="lc-form">
+      <button class="lc-img-toggle" id="lc-img-toggle" aria-label="Image bhejein" title="Image/GIF">🖼️</button>
+      <input type="text" id="lc-text-input" maxlength="300" placeholder="Message likhein... (@ se tag karein)">
+      <button class="lc-send" id="lc-send-btn" aria-label="Bhejein">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4A1B0C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, query, orderBy, limit,
-    onSnapshot, serverTimestamp
+    getFirestore, collection, addDoc, doc, setDoc, updateDoc, deleteDoc,
+    query, orderBy, limit, onSnapshot, serverTimestamp, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   // ----- YAHAN APNA FIREBASE CONFIG PASTE KAREIN -----
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyDKnJueIviOT1HGEKccWJItk3s8GNckF6I",
     authDomain: "unblockedgame-chat.firebaseapp.com",
@@ -148,32 +193,59 @@
   };
   // ----------------------------------------------------
 
+  // Yahan apni background image ka link daal sakte hain (khali bhi rakh sakte hain)
+  const CHAT_BACKGROUND_IMAGE = "";
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const messagesRef = collection(db, "livechat_messages");
+  const usersRef = collection(db, "livechat_users");
 
   const BANNED = ['fuck','fuc','fck','madarchod','bhosdi','chutiya','gandu','bkl','saala','harami','loda','randi'];
-  function containsBanned(str){
-    var s = str.toLowerCase();
-    for(var i=0;i<BANNED.length;i++){ if(s.indexOf(BANNED[i]) !== -1) return true; }
-    return false;
+  function maskBanned(str){
+    let out = str;
+    BANNED.forEach(function(word){
+      const re = new RegExp(word, 'gi');
+      out = out.replace(re, '***');
+    });
+    return out;
+  }
+
+  const PALETTE = ['#8FD9C4','#7FB8E0','#F4B183','#C9A0DC','#F7D774','#F6989D','#A9D66B','#E0A8D8'];
+  function colorFor(name){
+    let h = 0;
+    for(let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) % 9973;
+    return PALETTE[h % PALETTE.length];
   }
 
   const launcher = document.getElementById('lc-launcher');
   const badge = document.getElementById('lc-badge');
   const panel = document.getElementById('lc-panel');
   const closeBtn = document.getElementById('lc-close');
+  const fullscreenBtn = document.getElementById('lc-fullscreen');
   const nameGate = document.getElementById('lc-name-gate');
   const nameInput = document.getElementById('lc-name-input');
   const nameSubmit = document.getElementById('lc-name-submit');
   const messagesBox = document.getElementById('lc-messages');
-  const form = document.getElementById('lc-form');
+  const formWrap = document.getElementById('lc-form-wrap');
   const textInput = document.getElementById('lc-text-input');
   const sendBtn = document.getElementById('lc-send-btn');
+  const suggestBox = document.getElementById('lc-suggest');
+  const imgToggle = document.getElementById('lc-img-toggle');
+  const imageRow = document.getElementById('lc-image-row');
+  const imageInput = document.getElementById('lc-image-input');
+  const imageSend = document.getElementById('lc-image-send');
+
+  if(CHAT_BACKGROUND_IMAGE){
+    messagesBox.style.backgroundImage =
+      "linear-gradient(rgba(22,32,43,0.88), rgba(22,32,43,0.88)), url('" + CHAT_BACKGROUND_IMAGE + "')";
+  }
 
   let myName = localStorage.getItem('lc_username') || '';
   let unread = 0;
   let panelOpen = false;
+  let knownUsers = [];
+  let lastSnapshotDocs = [];
 
   if(myName){ showChat(); }
 
@@ -186,12 +258,16 @@
     panelOpen = false;
     panel.classList.remove('open');
   });
+  fullscreenBtn.addEventListener('click', function(){
+    panel.classList.toggle('fullscreen');
+  });
 
   nameSubmit.addEventListener('click', function(){
     const n = nameInput.value.trim();
     if(!n) return;
     myName = n;
     localStorage.setItem('lc_username', n);
+    setDoc(doc(usersRef, n), { name: n, lastSeen: serverTimestamp() });
     showChat();
   });
   nameInput.addEventListener('keydown', function(e){
@@ -201,8 +277,17 @@
   function showChat(){
     nameGate.style.display = 'none';
     messagesBox.style.display = 'flex';
-    form.style.display = 'flex';
+    formWrap.style.display = 'block';
     listenForMessages();
+    listenForUsers();
+    setInterval(renderMessages, 5000); // delete-button ki 1-min limit ko refresh karta rahe
+  }
+
+  function listenForUsers(){
+    onSnapshot(query(usersRef, orderBy('lastSeen','desc'), limit(50)), function(snap){
+      knownUsers = [];
+      snap.forEach(function(d){ knownUsers.push(d.id); });
+    });
   }
 
   function timeNow(ts){
@@ -211,23 +296,18 @@
     return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
   }
 
+  function renderText(text){
+    return text.replace(/(^|\s)(@[a-zA-Z0-9_]+)/g, function(m, pre, tag){
+      return pre + '<span class="lc-mention">' + tag + '</span>';
+    });
+  }
+
   function listenForMessages(){
-    const q = query(messagesRef, orderBy('ts','asc'), limit(100));
+    const q = query(messagesRef, orderBy('ts','asc'), limit(150));
     onSnapshot(q, function(snap){
-      messagesBox.innerHTML = '';
-      snap.forEach(function(doc){
-        const m = doc.data();
-        const el = document.createElement('div');
-        el.className = 'lc-msg ' + (m.author === myName ? 'me' : 'other');
-        el.innerHTML =
-          (m.author === myName ? '' : '<span class="lc-name"></span>') +
-          '<span class="lc-body"></span>' +
-          '<span class="lc-time"></span>';
-        if(m.author !== myName) el.querySelector('.lc-name').textContent = m.author;
-        el.querySelector('.lc-body').textContent = m.text;
-        el.querySelector('.lc-time').textContent = timeNow(m.ts);
-        messagesBox.appendChild(el);
-      });
+      lastSnapshotDocs = [];
+      snap.forEach(function(d){ lastSnapshotDocs.push({ id: d.id, data: d.data() }); });
+      renderMessages();
       messagesBox.scrollTop = messagesBox.scrollHeight;
       if(!panelOpen && snap.docChanges().some(c => c.type === 'added')){
         unread++;
@@ -237,17 +317,135 @@
     });
   }
 
+  function renderMessages(){
+    messagesBox.innerHTML = '';
+    lastSnapshotDocs.forEach(function(item){
+      const id = item.id;
+      const m = item.data;
+      const isMe = m.author === myName;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'lc-msg-wrap ' + (isMe ? 'me' : 'other');
+
+      const bubble = document.createElement('div');
+      bubble.className = 'lc-msg ' + (isMe ? 'me' : 'other');
+      if(!isMe) bubble.style.background = colorFor(m.author);
+
+      let inner = '';
+      if(!isMe) inner += '<span class="lc-name"></span>';
+      if(m.text) inner += '<span class="lc-body"></span>';
+      if(m.image) inner += '<img class="lc-img" src="' + m.image + '">';
+      bubble.innerHTML = inner;
+      if(!isMe) bubble.querySelector('.lc-name').textContent = m.author;
+      if(m.text) bubble.querySelector('.lc-body').innerHTML = renderText(m.text);
+
+      bubble.addEventListener('click', function(e){
+        if(e.target.tagName === 'IMG') return;
+        const cur = textInput.value;
+        textInput.value = (cur ? cur + ' ' : '') + '@' + m.author + ' ';
+        textInput.focus();
+      });
+
+      wrap.appendChild(bubble);
+
+      const meta = document.createElement('div');
+      meta.className = 'lc-meta-row';
+      const time = document.createElement('span');
+      time.textContent = timeNow(m.ts);
+      meta.appendChild(time);
+
+      if(!isMe){
+        const likes = m.likes || [];
+        const likeBtn = document.createElement('button');
+        likeBtn.className = 'lc-like-btn' + (likes.indexOf(myName) !== -1 ? ' liked' : '');
+        likeBtn.textContent = '♥ ' + likes.length;
+        likeBtn.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          const msgDoc = doc(messagesRef, id);
+          if(likes.indexOf(myName) !== -1){
+            updateDoc(msgDoc, { likes: arrayRemove(myName) });
+          } else {
+            updateDoc(msgDoc, { likes: arrayUnion(myName) });
+          }
+        });
+        meta.appendChild(likeBtn);
+      }
+
+      if(isMe && m.ts && m.ts.toMillis && (Date.now() - m.ts.toMillis()) < 60000){
+        const delBtn = document.createElement('button');
+        delBtn.className = 'lc-del-btn';
+        delBtn.textContent = 'delete';
+        delBtn.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          deleteDoc(doc(messagesRef, id));
+        });
+        meta.appendChild(delBtn);
+      }
+
+      wrap.appendChild(meta);
+      messagesBox.appendChild(wrap);
+    });
+  }
+
+  // --- @mention suggestions while typing ---
+  textInput.addEventListener('input', function(){
+    const val = textInput.value;
+    const atMatch = val.match(/@([a-zA-Z0-9_]*)$/);
+    if(atMatch){
+      const partial = atMatch[1].toLowerCase();
+      const matches = knownUsers.filter(function(u){ return u.toLowerCase().indexOf(partial) === 0 && u !== myName; });
+      if(matches.length){
+        suggestBox.innerHTML = '';
+        matches.slice(0,6).forEach(function(u){
+          const opt = document.createElement('div');
+          opt.textContent = '@' + u;
+          opt.addEventListener('click', function(){
+            textInput.value = val.slice(0, atMatch.index) + '@' + u + ' ';
+            suggestBox.style.display = 'none';
+            textInput.focus();
+          });
+          suggestBox.appendChild(opt);
+        });
+        suggestBox.style.display = 'block';
+      } else {
+        suggestBox.style.display = 'none';
+      }
+    } else {
+      suggestBox.style.display = 'none';
+    }
+  });
+
+  // --- image/gif row toggle ---
+  imgToggle.addEventListener('click', function(){
+    imageRow.style.display = imageRow.style.display === 'flex' ? 'none' : 'flex';
+    imageRow.style.gap = '6px';
+    if(imageRow.style.display === 'flex') imageInput.focus();
+  });
+  imageSend.addEventListener('click', sendImage);
+  imageInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') sendImage(); });
+
+  async function sendImage(){
+    const url = imageInput.value.trim();
+    if(!url || !myName) return;
+    imageInput.value = '';
+    imageRow.style.display = 'none';
+    await addDoc(messagesRef, { author: myName, text: '', image: url, likes: [], ts: serverTimestamp() });
+    await setDoc(doc(usersRef, myName), { name: myName, lastSeen: serverTimestamp() });
+  }
+
   sendBtn.addEventListener('click', sendMessage);
   textInput.addEventListener('keydown', function(e){
-    if(e.key === 'Enter') sendMessage();
+    if(e.key === 'Enter' && suggestBox.style.display !== 'block') sendMessage();
   });
 
   async function sendMessage(){
-    const text = textInput.value.trim();
-    if(!text || !myName) return;
-    if(containsBanned(text)){ textInput.value = ''; return; }
+    const raw = textInput.value.trim();
+    if(!raw || !myName) return;
+    const text = maskBanned(raw);
     textInput.value = '';
-    await addDoc(messagesRef, { author: myName, text: text, ts: serverTimestamp() });
+    suggestBox.style.display = 'none';
+    await addDoc(messagesRef, { author: myName, text: text, image: null, likes: [], ts: serverTimestamp() });
+    await setDoc(doc(usersRef, myName), { name: myName, lastSeen: serverTimestamp() });
   }
 </script>
 
