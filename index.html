@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Live Chat Widget</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -35,7 +36,9 @@
 
   #lc-panel{
     position: fixed; right: 24px; bottom: 94px; z-index: 9999;
-    width: 340px; height: 460px; display:none; flex-direction:column;
+    width: min(390px, calc(100vw - 32px));
+    height: min(660px, calc(100vh - 118px));
+    display:none; flex-direction:column;
     background: var(--dark); border-radius: 14px; overflow:hidden;
     box-shadow: 0 12px 40px rgba(0,0,0,0.45);
     transition: all .2s ease;
@@ -43,6 +46,18 @@
   #lc-panel.open{ display:flex; }
   #lc-panel.fullscreen{
     right:0; bottom:0; top:0; left:0; width:100%; height:100%; border-radius:0;
+  }
+
+  /* Responsive: small phones get a full-screen chat automatically */
+  @media (max-width: 480px){
+    #lc-launcher{ right:16px; bottom:16px; width:52px; height:52px; }
+    #lc-panel{
+      right:0; left:0; bottom:0; top:0; width:100%; height:100%;
+      border-radius:0; max-height:none;
+    }
+  }
+  @media (max-width: 480px) and (min-width: 0px){
+    #lc-panel:not(.open){ display:none; }
   }
 
   #lc-header{
@@ -61,12 +76,19 @@
 
   #lc-messages{
     flex:1; overflow-y:auto; padding: 14px; display:flex; flex-direction:column; gap:10px;
-    background-size: cover; background-position:center;
+    position:relative;
+    background-color: var(--dark);
+    background-image:
+      linear-gradient(rgba(22,32,43,0.87), rgba(22,32,43,0.87)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23415066' stroke-width='1.4' opacity='0.6'%3E%3Ccircle cx='20' cy='20' r='9'/%3E%3Cpath d='M45 15h20a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H55l-6 6v-6h-4a6 6 0 0 1-6-6V21a6 6 0 0 1 6-6z'/%3E%3Cpath d='M15 60l6 6 10-10'/%3E%3Ccircle cx='95' cy='55' r='7'/%3E%3Cpath d='M80 90h18a5 5 0 0 0 5-5V75a5 5 0 0 0-5-5H83a5 5 0 0 0-5 5v10l-6 5z'/%3E%3Cpath d='M20 95a8 8 0 1 0 16 0 8 8 0 1 0-16 0z'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: cover, 120px 120px;
+    background-position: center, 0 0;
   }
   #lc-messages:empty::after{
-    content: 'Abhi tak koi message nahi. Sab se pehle aap likhein.';
+    content: 'No messages yet. Be the first to write one.';
     color: rgba(255,255,255,0.6); font-size:12px; text-align:center; display:block; margin-top:20px;
   }
+
   .lc-msg-wrap{ display:flex; flex-direction:column; max-width:80%; }
   .lc-msg-wrap.me{ align-self:flex-end; align-items:flex-end; }
   .lc-msg-wrap.other{ align-self:flex-start; align-items:flex-start; }
@@ -81,42 +103,118 @@
   .lc-msg .lc-mention{ font-weight:700; text-decoration:underline; }
   .lc-msg img.lc-img{ max-width:180px; border-radius:8px; display:block; margin-top:4px; }
 
+  .lc-quote{
+    border-left: 3px solid rgba(0,0,0,0.35); padding: 4px 8px; margin-bottom:6px;
+    border-radius: 4px; background: rgba(0,0,0,0.08); font-size:11.5px;
+  }
+  .lc-quote.lc-quote-clickable{ cursor:pointer; }
+  .lc-quote.lc-quote-clickable:hover{ background: rgba(0,0,0,0.16); }
+  .lc-quote .lc-quote-author{ display:block; font-weight:700; font-size:11px; }
+  .lc-quote .lc-quote-text{ opacity:.85; }
+
+  .lc-msg-wrap.lc-highlight .lc-msg{
+    animation: lc-flash 1.3s ease;
+  }
+  @keyframes lc-flash{
+    0%{ box-shadow: 0 0 0 3px var(--accent); }
+    70%{ box-shadow: 0 0 0 3px var(--accent); }
+    100%{ box-shadow: 0 0 0 0 rgba(255,107,74,0); }
+  }
+
   .lc-meta-row{ display:flex; align-items:center; gap:8px; margin-top:2px; font-size:10px; opacity:.6; color: var(--text-light); }
   .lc-meta-row .lc-like-btn{ cursor:pointer; background:none; border:none; color:inherit; font-size:11px; padding:0; }
   .lc-meta-row .lc-like-btn.liked{ color:#FF6B4A; }
-  .lc-meta-row .lc-del-btn{ cursor:pointer; background:none; border:none; color:inherit; font-size:10px; padding:0; text-decoration:underline; }
+  .lc-meta-row .lc-del-btn, .lc-meta-row .lc-reply-btn{ cursor:pointer; background:none; border:none; color:inherit; font-size:10px; padding:0; text-decoration:underline; }
+  .lc-meta-row .lc-reply-btn:hover, .lc-meta-row .lc-del-btn:hover{ opacity:1; color:var(--accent); }
+
+  #lc-jump-bottom{
+    position:absolute; bottom:10px; right:14px; background: var(--accent); color: var(--accent-ink);
+    border:none; border-radius:16px; padding:5px 12px; font-size:11px; font-weight:600; cursor:pointer;
+    display:none; box-shadow:0 2px 8px rgba(0,0,0,.35); z-index:4;
+  }
 
   #lc-suggest{
     position:absolute; bottom:100%; left:10px; right:10px; background:#2C3B4C; border-radius:8px;
-    margin-bottom:6px; max-height:120px; overflow-y:auto; display:none; box-shadow:0 4px 12px rgba(0,0,0,.4);
+    margin-bottom:6px; max-height:120px; overflow-y:auto; display:none; box-shadow:0 4px 12px rgba(0,0,0,.4); z-index:6;
   }
   #lc-suggest div{ padding:7px 12px; font-size:13px; color:var(--text-light); cursor:pointer; }
   #lc-suggest div:hover{ background:#3A4C60; }
 
+  #lc-reply-bar{
+    display:none; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 12px; margin:8px 10px 0; background:#2C3B4C; border-radius:8px;
+    border-left: 3px solid var(--accent);
+  }
+  #lc-reply-bar .lc-reply-info{ font-size:11px; color:var(--text-light); overflow:hidden; }
+  #lc-reply-bar .lc-reply-info b{ display:block; font-size:11px; }
+  #lc-reply-bar .lc-reply-info span{ opacity:.7; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
+  #lc-reply-bar button{ background:none; border:none; color:var(--text-light); opacity:.7; cursor:pointer; font-size:16px; }
+
   #lc-form-wrap{ position:relative; background: var(--dark-2); flex-shrink:0; }
-  #lc-image-row{ display:none; padding: 8px 10px 0; gap:6px; }
-  #lc-image-row input{
+
+  /* ---- Emoji panel with categories ---- */
+  #lc-emoji-panel{
+    display:none; flex-direction:column; padding: 8px 10px 0;
+  }
+  #lc-emoji-tabs{
+    display:flex; gap:4px; overflow-x:auto; padding-bottom:6px; flex-shrink:0;
+    scrollbar-width: thin;
+  }
+  #lc-emoji-tabs::-webkit-scrollbar{ height:4px; }
+  #lc-emoji-tabs .lc-emoji-tab{
+    flex-shrink:0; background:#2C3B4C; border:none; border-radius:14px; color:var(--text-light);
+    font-size:11px; padding:5px 10px; cursor:pointer; opacity:.65; white-space:nowrap;
+  }
+  #lc-emoji-tabs .lc-emoji-tab.active{ background: var(--accent); color: var(--accent-ink); opacity:1; font-weight:600; }
+  #lc-emoji-grid{
+    display:grid; grid-template-columns: repeat(8, 1fr); gap:4px; max-height:170px; overflow-y:auto;
+  }
+  #lc-emoji-grid span{ font-size:19px; text-align:center; cursor:pointer; padding:3px; border-radius:6px; }
+  #lc-emoji-grid span:hover{ background:#2C3B4C; }
+
+  #lc-image-row{ display:none; padding: 8px 10px 0; gap:6px; align-items:center; }
+  #lc-image-row input[type=text]{
     flex:1; border-radius:8px; border:none; padding:7px 10px; font-size:12px;
-    background:#2C3B4C; color:var(--text-light);
+    background:#2C3B4C; color:var(--text-light); min-width:0;
   }
   #lc-image-row button{
     background: var(--accent); color:var(--accent-ink); border:none; border-radius:8px;
-    padding:0 10px; font-size:12px; font-weight:600; cursor:pointer;
+    padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;
   }
+
+  #lc-gif-panel{ display:none; padding: 8px 10px 0; }
+  #lc-gif-panel input[type=text]{
+    width:100%; border-radius:8px; border:none; padding:7px 10px; font-size:12px;
+    background:#2C3B4C; color:var(--text-light); margin-bottom:6px;
+  }
+  #lc-gif-results{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap:5px; max-height:280px; overflow-y:auto;
+    scrollbar-width: thin;
+  }
+  #lc-gif-results::-webkit-scrollbar{ width:5px; }
+  #lc-gif-results img{ width:100%; height:80px; object-fit:cover; border-radius:6px; cursor:pointer; }
+  #lc-gif-hint{ font-size:11px; color:var(--text-light); opacity:.6; padding-top:2px; }
+
   #lc-form{
-    padding: 10px; display:flex; gap:8px; align-items:flex-end;
+    padding: 10px; display:flex; gap:6px; align-items:flex-end; flex-wrap:nowrap;
   }
   #lc-form input[type=text]{
-    flex:1; border-radius:20px; border:none; padding:9px 14px;
+    flex:1; min-width:0; border-radius:20px; border:none; padding:9px 14px;
     font-family:'Inter',sans-serif; font-size:13px; background:#2C3B4C; color:var(--text-light);
   }
   #lc-form input[type=text]::placeholder{ color:rgba(255,255,255,0.4); }
   #lc-form button{
     background: var(--accent); color:var(--accent-ink); border:none; border-radius:50%;
-    width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:34px; height:34px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-size:15px;
   }
   #lc-form button:hover{ filter:brightness(1.05); }
-  #lc-form button.lc-img-toggle{ background:#2C3B4C; color:var(--text-light); }
+  #lc-form button.lc-toggle-btn{ background:#2C3B4C; color:var(--text-light); font-size:12px; }
+
+  @media (max-width: 360px){
+    #lc-form{ flex-wrap:wrap; }
+    #lc-form input[type=text]{ order:1; flex-basis:100%; }
+  }
 
   #lc-name-gate{
     padding: 16px; background: var(--dark); display:flex; flex-direction:column; gap:10px;
@@ -131,11 +229,14 @@
     background: var(--accent); color:var(--accent-ink); border:none; border-radius:8px;
     padding:9px; font-weight:600; font-size:13px; cursor:pointer; width:100%;
   }
+  #lc-name-error{
+    color:#FF7A6E; font-size:12px; text-align:center; margin:0; display:none;
+  }
 </style>
 </head>
 <body>
 
-<button id="lc-launcher" aria-label="Chat kholein">
+<button id="lc-launcher" aria-label="Open chat">
   <svg viewBox="0 0 24 24" fill="none" stroke="#4A1B0C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
   <span id="lc-badge"></span>
 </button>
@@ -145,28 +246,50 @@
     <span class="lc-status"><span class="lc-dot"></span> Live chat</span>
     <div class="lc-header-btns">
       <button id="lc-fullscreen" aria-label="Fullscreen" title="Fullscreen">⛶</button>
-      <button id="lc-close" aria-label="Band karein">&times;</button>
+      <button id="lc-close" aria-label="Close">&times;</button>
     </div>
   </div>
 
   <div id="lc-name-gate">
-    <p>Chat mein shamil hone ke liye apna naam likhein</p>
-    <input type="text" id="lc-name-input" maxlength="20" placeholder="Aapka naam">
-    <button id="lc-name-submit">Shamil hon</button>
+    <p>Enter your name to join the chat</p>
+    <input type="text" id="lc-name-input" maxlength="20" placeholder="Your name">
+    <p id="lc-name-error">That name is already taken. Please pick another one.</p>
+    <button id="lc-name-submit">Join</button>
   </div>
 
-  <div id="lc-messages" style="display:none;"></div>
+  <div id="lc-messages" style="display:none;">
+    <button id="lc-jump-bottom">↓ New messages</button>
+  </div>
 
   <div id="lc-form-wrap" style="display:none;">
     <div id="lc-suggest"></div>
-    <div id="lc-image-row">
-      <input type="text" id="lc-image-input" placeholder="Image ya GIF ka link paste karein...">
-      <button id="lc-image-send">Bhejein</button>
+    <div id="lc-reply-bar">
+      <div class="lc-reply-info"><b id="lc-reply-author"></b><span id="lc-reply-text"></span></div>
+      <button id="lc-reply-cancel" aria-label="Cancel">&times;</button>
     </div>
+
+    <div id="lc-emoji-panel">
+      <div id="lc-emoji-tabs"></div>
+      <div id="lc-emoji-grid"></div>
+    </div>
+
+    <div id="lc-image-row">
+      <input type="text" id="lc-image-input" placeholder="Paste image link...">
+      <button id="lc-image-send">Send link</button>
+    </div>
+
+    <div id="lc-gif-panel">
+      <input type="text" id="lc-gif-search" placeholder="Search GIFs (e.g. happy, hi, lol)...">
+      <div id="lc-gif-results"></div>
+      <div id="lc-gif-hint"></div>
+    </div>
+
     <div id="lc-form">
-      <button class="lc-img-toggle" id="lc-img-toggle" aria-label="Image bhejein" title="Image/GIF">🖼️</button>
-      <input type="text" id="lc-text-input" maxlength="300" placeholder="Message likhein... (@ se tag karein)">
-      <button class="lc-send" id="lc-send-btn" aria-label="Bhejein">
+      <button class="lc-toggle-btn" id="lc-emoji-toggle" aria-label="Emoji" title="Emoji">😊</button>
+      <button class="lc-toggle-btn" id="lc-img-toggle" aria-label="Send image link" title="Image link">🖼️</button>
+      <button class="lc-toggle-btn" id="lc-gif-toggle" aria-label="Send GIF" title="GIF">GIF</button>
+      <input type="text" id="lc-text-input" maxlength="300" placeholder="Type a message... (use @ to tag)">
+      <button class="lc-send" id="lc-send-btn" aria-label="Send">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4A1B0C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
     </div>
@@ -176,11 +299,11 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, doc, setDoc, updateDoc, deleteDoc,
+    getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc,
     query, orderBy, limit, onSnapshot, serverTimestamp, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // ----- YAHAN APNA FIREBASE CONFIG PASTE KAREIN -----
+  // ----- PASTE YOUR FIREBASE CONFIG HERE -----
   const firebaseConfig = {
     apiKey: "AIzaSyDKnJueIviOT1HGEKccWJItk3s8GNckF6I",
     authDomain: "unblockedgame-chat.firebaseapp.com",
@@ -191,10 +314,10 @@
     appId: "1:316395679509:web:6b07fe7216347c8341431c",
     measurementId: "G-YY019HWRCZ"
   };
-  // ----------------------------------------------------
+  // --------------------------------------------
 
-  // Yahan apni background image ka link daal sakte hain (khali bhi rakh sakte hain)
-  const CHAT_BACKGROUND_IMAGE = "";
+  // Your Giphy API key (from developers.giphy.com/dashboard)
+  const GIPHY_API_KEY = "iakWpXX92v4uxU3R1lO5Vk41OFbSFM5O";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -218,6 +341,19 @@
     return PALETTE[h % PALETTE.length];
   }
 
+  // ---- Emoji categories ----
+  const EMOJI_CATEGORIES = {
+    'Smileys': ['😀','😁','😂','🤣','😊','🙂','😉','😍','😘','😜','🤔','😎','🥳','🤩','😴','😅','😇','🥺','😢','😭','😡','😱','🤗','🙃','😏','🥱','😬','🤯','🥵','🥶','🤢'],
+    'People': ['👍','👎','👏','🙏','💪','✌️','🤝','👌','👋','🤙','🤟','🖐️','👊','🙌','💃','🕺','👶','👧','👦','👩','👨','🧑','👵','👴','🧕','👮','👨‍⚕️','👩‍🍳','🧑‍🎓','🧑‍💻'],
+    'Animals': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🦄','🐴','🐝','🦋','🐢','🐍','🦈','🐙','🦀','🐘','🦒','🐪','🦉'],
+    'Food': ['🍏','🍎','🍌','🍉','🍇','🍓','🍒','🍑','🍍','🥑','🍕','🍔','🌭','🍟','🍗','🍩','🍪','🎂','🍫','🍿','☕','🍵','🍺','🍷','🥤','🍦','🍰','🍜','🍣','🍫'],
+    'Activities': ['⚽','🏀','🏈','⚾','🎾','🏐','🏓','🏸','🎱','🎮','🎲','🎯','🎳','🏆','🥇','🎨','🎬','🎤','🎧','🎸','🎉','🎊','🎁','🎈','🏋️','🚴','🏊','⛳','🎿'],
+    'Travel': ['🚗','🚕','🚌','🚓','🚑','🚒','🚀','✈️','🚁','⛵','🚢','🚲','🏖️','🏝️','🏔️','🗽','🗼','🏰','🌋','🌅','🌆','🌃','🚦','🗺️','⛰️','🏕️','🚉','🛣️'],
+    'Objects': ['⌚','📱','💻','⌨️','🖥️','📷','📞','🔋','💡','🔦','💰','💎','🔑','🔒','📌','📎','✂️','🔍','💊','🎁','🛒','📚','✏️','🖊️','📅','🎒','💼'],
+    'Symbols': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','❣️','💕','💯','✅','❌','⭕','❗','❓','♻️','⚠️','🔥','✨','⭐','🔴','🟢','🔵','🟡','💤','🚫'],
+    'Flags': ['🏳️','🏴','🚩','🏁','🇵🇰','🇺🇸','🇬🇧','🇮🇳','🇸🇦','🇦🇪','🇹🇷','🇨🇳','🇯🇵','🇩🇪','🇫🇷','🇨🇦','🇦🇺','🇧🇩','🇮🇩']
+  };
+
   const launcher = document.getElementById('lc-launcher');
   const badge = document.getElementById('lc-badge');
   const panel = document.getElementById('lc-panel');
@@ -226,19 +362,97 @@
   const nameGate = document.getElementById('lc-name-gate');
   const nameInput = document.getElementById('lc-name-input');
   const nameSubmit = document.getElementById('lc-name-submit');
+  const nameError = document.getElementById('lc-name-error');
   const messagesBox = document.getElementById('lc-messages');
+  const jumpBottomBtn = document.getElementById('lc-jump-bottom');
   const formWrap = document.getElementById('lc-form-wrap');
   const textInput = document.getElementById('lc-text-input');
   const sendBtn = document.getElementById('lc-send-btn');
   const suggestBox = document.getElementById('lc-suggest');
+
+  const emojiToggle = document.getElementById('lc-emoji-toggle');
+  const emojiPanel = document.getElementById('lc-emoji-panel');
+  const emojiTabs = document.getElementById('lc-emoji-tabs');
+  const emojiGrid = document.getElementById('lc-emoji-grid');
+
   const imgToggle = document.getElementById('lc-img-toggle');
   const imageRow = document.getElementById('lc-image-row');
   const imageInput = document.getElementById('lc-image-input');
   const imageSend = document.getElementById('lc-image-send');
 
-  if(CHAT_BACKGROUND_IMAGE){
-    messagesBox.style.backgroundImage =
-      "linear-gradient(rgba(22,32,43,0.88), rgba(22,32,43,0.88)), url('" + CHAT_BACKGROUND_IMAGE + "')";
+  const gifToggle = document.getElementById('lc-gif-toggle');
+  const gifPanel = document.getElementById('lc-gif-panel');
+  const gifSearch = document.getElementById('lc-gif-search');
+  const gifResults = document.getElementById('lc-gif-results');
+  const gifHint = document.getElementById('lc-gif-hint');
+
+  const replyBar = document.getElementById('lc-reply-bar');
+  const replyAuthorEl = document.getElementById('lc-reply-author');
+  const replyTextEl = document.getElementById('lc-reply-text');
+  const replyCancel = document.getElementById('lc-reply-cancel');
+
+  // ---- build the categorized emoji picker ----
+  function renderEmojiGrid(catName){
+    emojiGrid.innerHTML = '';
+    EMOJI_CATEGORIES[catName].forEach(function(em){
+      const s = document.createElement('span');
+      s.textContent = em;
+      s.addEventListener('click', function(){
+        textInput.value += em;
+        textInput.focus();
+      });
+      emojiGrid.appendChild(s);
+    });
+  }
+  Object.keys(EMOJI_CATEGORIES).forEach(function(catName, idx){
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'lc-emoji-tab' + (idx === 0 ? ' active' : '');
+    tab.textContent = catName;
+    tab.addEventListener('click', function(){
+      emojiTabs.querySelectorAll('.lc-emoji-tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      renderEmojiGrid(catName);
+    });
+    emojiTabs.appendChild(tab);
+  });
+  renderEmojiGrid(Object.keys(EMOJI_CATEGORIES)[0]);
+
+  function hideAllPanels(){
+    emojiPanel.style.display = 'none';
+    imageRow.style.display = 'none';
+    gifPanel.style.display = 'none';
+  }
+  emojiToggle.addEventListener('click', function(){
+    const showing = emojiPanel.style.display === 'flex';
+    hideAllPanels();
+    emojiPanel.style.display = showing ? 'none' : 'flex';
+  });
+  imgToggle.addEventListener('click', function(){
+    const showing = imageRow.style.display === 'flex';
+    hideAllPanels();
+    imageRow.style.display = showing ? 'none' : 'flex';
+    if(!showing) imageInput.focus();
+  });
+  gifToggle.addEventListener('click', function(){
+    const showing = gifPanel.style.display === 'block';
+    hideAllPanels();
+    gifPanel.style.display = showing ? 'none' : 'block';
+    if(!showing){
+      gifSearch.focus();
+      if(!gifResults.childElementCount) searchGifs('hi');
+    }
+  });
+
+  // ---- unique browser identity ----
+  function makeId(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+  let clientId = localStorage.getItem('lc_client_id');
+  if(!clientId){
+    clientId = makeId();
+    localStorage.setItem('lc_client_id', clientId);
   }
 
   let myName = localStorage.getItem('lc_username') || '';
@@ -246,13 +460,40 @@
   let panelOpen = false;
   let knownUsers = [];
   let lastSnapshotDocs = [];
+  let replyingTo = null; // { author, text, image }
+
+  // ---- FIX 1: highlight state persists across re-renders ----
+  // Previously the highlight class was added directly to a DOM node, but
+  // renderMessages() wipes and rebuilds the whole message list on every
+  // Firestore update (new message, like, or the 5s refresh tick). If any of
+  // those fired during the 1.3s flash window, the highlighted element got
+  // thrown away and replaced with a fresh one that had no highlight class -
+  // which is why the flash seemed to randomly fail. Now we track *which*
+  // message should be highlighted and re-apply the class every time we render.
+  let highlightedMsgId = null;
+  let highlightTimeout = null;
+
+  // ---- FIX 2: "new messages" indicator persists across re-renders ----
+  // The pill used to only show up during the exact onSnapshot call where a
+  // message was added (hasNew === true). But renderMessages() is also called
+  // by the 5s interval and by like/unlike updates with no argument, which
+  // reset hasNew to falsy and hid the pill again almost immediately - so
+  // clicking it often did nothing because it had already vanished. Now we
+  // keep a persistent flag that only clears once the user is actually back
+  // near the bottom.
+  let hasUnseenBelow = false;
 
   if(myName){ showChat(); }
 
   launcher.addEventListener('click', function(){
     panelOpen = !panelOpen;
     panel.classList.toggle('open', panelOpen);
-    if(panelOpen){ unread = 0; badge.style.display = 'none'; }
+    if(panelOpen){
+      unread = 0;
+      badge.style.display = 'none';
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+      hasUnseenBelow = false;
+    }
   });
   closeBtn.addEventListener('click', function(){
     panelOpen = false;
@@ -262,17 +503,37 @@
     panel.classList.toggle('fullscreen');
   });
 
-  nameSubmit.addEventListener('click', function(){
+  nameSubmit.addEventListener('click', claimName);
+  nameInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') claimName();
+  });
+
+  async function claimName(){
     const n = nameInput.value.trim();
     if(!n) return;
-    myName = n;
-    localStorage.setItem('lc_username', n);
-    setDoc(doc(usersRef, n), { name: n, lastSeen: serverTimestamp() });
-    showChat();
-  });
-  nameInput.addEventListener('keydown', function(e){
-    if(e.key === 'Enter') nameSubmit.click();
-  });
+    nameError.style.display = 'none';
+    nameSubmit.disabled = true;
+    nameSubmit.textContent = 'Checking...';
+    try{
+      const existing = await getDoc(doc(usersRef, n));
+      if(existing.exists() && existing.data().ownerId && existing.data().ownerId !== clientId){
+        nameError.style.display = 'block';
+        nameSubmit.disabled = false;
+        nameSubmit.textContent = 'Join';
+        return;
+      }
+      await setDoc(doc(usersRef, n), { name: n, ownerId: clientId, lastSeen: serverTimestamp() });
+      myName = n;
+      localStorage.setItem('lc_username', n);
+      showChat();
+    } catch(err){
+      nameError.textContent = 'Something went wrong, please try again.';
+      nameError.style.display = 'block';
+    } finally {
+      nameSubmit.disabled = false;
+      nameSubmit.textContent = 'Join';
+    }
+  }
 
   function showChat(){
     nameGate.style.display = 'none';
@@ -280,7 +541,7 @@
     formWrap.style.display = 'block';
     listenForMessages();
     listenForUsers();
-    setInterval(renderMessages, 5000); // delete-button ki 1-min limit ko refresh karta rahe
+    setInterval(function(){ renderMessages(false); }, 5000); // refresh so the 1-minute delete window updates
   }
 
   function listenForUsers(){
@@ -307,9 +568,9 @@
     onSnapshot(q, function(snap){
       lastSnapshotDocs = [];
       snap.forEach(function(d){ lastSnapshotDocs.push({ id: d.id, data: d.data() }); });
-      renderMessages();
-      messagesBox.scrollTop = messagesBox.scrollHeight;
-      if(!panelOpen && snap.docChanges().some(c => c.type === 'added')){
+      const hasNew = snap.docChanges().some(c => c.type === 'added');
+      renderMessages(hasNew);
+      if(!panelOpen && hasNew){
         unread++;
         badge.textContent = unread;
         badge.style.display = 'flex';
@@ -317,8 +578,48 @@
     });
   }
 
-  function renderMessages(){
+  function startReplyTo(m, id){
+    replyingTo = { id: id, author: m.author, text: m.text || '', image: m.image || null };
+    showReplyBar();
+  }
+
+  // WhatsApp-style jump: scroll the original message into view and flash it.
+  // We remember which id should be highlighted (highlightedMsgId) instead of
+  // only touching the live DOM node, so the flash survives any re-render
+  // that happens in the next 1.3s (new message, like, or the 5s tick).
+  function jumpToMessage(targetId){
+    highlightedMsgId = targetId;
+    if(highlightTimeout) clearTimeout(highlightTimeout);
+
+    const el = document.getElementById('lc-msg-' + targetId);
+    if(el){
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('lc-highlight');
+    }
+    // if el doesn't exist yet (message too old, outside the loaded 150 limit)
+    // nothing to scroll to, but we still clear the pending highlight below.
+
+    highlightTimeout = setTimeout(function(){
+      highlightedMsgId = null;
+      const stale = document.getElementById('lc-msg-' + targetId);
+      if(stale) stale.classList.remove('lc-highlight');
+    }, 1300);
+  }
+
+  // Smart auto-scroll: only jump to the newest message if the user is
+  // already near the bottom (or it's the first load). If they've scrolled
+  // up to read older messages, their position is preserved and a
+  // "New messages" button appears instead of yanking them down - and it now
+  // stays visible (and clickable) until they actually scroll back down,
+  // instead of disappearing on the next unrelated re-render.
+  function renderMessages(hasNew){
+    const distanceFromBottom = messagesBox.scrollHeight - messagesBox.scrollTop - messagesBox.clientHeight;
+    const wasNearBottom = distanceFromBottom < 120 || messagesBox.scrollHeight === 0;
+    const prevScrollTop = messagesBox.scrollTop;
+
     messagesBox.innerHTML = '';
+    messagesBox.appendChild(jumpBottomBtn);
+
     lastSnapshotDocs.forEach(function(item){
       const id = item.id;
       const m = item.data;
@@ -326,24 +627,42 @@
 
       const wrap = document.createElement('div');
       wrap.className = 'lc-msg-wrap ' + (isMe ? 'me' : 'other');
+      wrap.id = 'lc-msg-' + id;
+      if(id === highlightedMsgId) wrap.classList.add('lc-highlight');
 
       const bubble = document.createElement('div');
       bubble.className = 'lc-msg ' + (isMe ? 'me' : 'other');
       if(!isMe) bubble.style.background = colorFor(m.author);
 
       let inner = '';
+      if(m.replyTo){
+        const clickable = m.replyTo.id ? ' lc-quote-clickable' : '';
+        inner += '<div class="lc-quote' + clickable + '"><span class="lc-quote-author"></span><span class="lc-quote-text"></span></div>';
+      }
       if(!isMe) inner += '<span class="lc-name"></span>';
       if(m.text) inner += '<span class="lc-body"></span>';
       if(m.image) inner += '<img class="lc-img" src="' + m.image + '">';
       bubble.innerHTML = inner;
+
+      if(m.replyTo){
+        const quoteEl = bubble.querySelector('.lc-quote');
+        quoteEl.querySelector('.lc-quote-author').textContent = m.replyTo.author;
+        quoteEl.querySelector('.lc-quote-text').textContent = m.replyTo.image ? '📷 Photo' : m.replyTo.text;
+        // WhatsApp-style: tapping the quoted preview jumps to and highlights the original message
+        if(m.replyTo.id){
+          quoteEl.addEventListener('click', function(ev){
+            ev.stopPropagation();
+            jumpToMessage(m.replyTo.id);
+          });
+        }
+      }
       if(!isMe) bubble.querySelector('.lc-name').textContent = m.author;
       if(m.text) bubble.querySelector('.lc-body').innerHTML = renderText(m.text);
 
       bubble.addEventListener('click', function(e){
         if(e.target.tagName === 'IMG') return;
-        const cur = textInput.value;
-        textInput.value = (cur ? cur + ' ' : '') + '@' + m.author + ' ';
-        textInput.focus();
+        if(e.target.closest('.lc-quote')) return;
+        startReplyTo(m, id);
       });
 
       wrap.appendChild(bubble);
@@ -371,6 +690,15 @@
         meta.appendChild(likeBtn);
       }
 
+      const replyBtn = document.createElement('button');
+      replyBtn.className = 'lc-reply-btn';
+      replyBtn.textContent = 'reply';
+      replyBtn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        startReplyTo(m, id);
+      });
+      meta.appendChild(replyBtn);
+
       if(isMe && m.ts && m.ts.toMillis && (Date.now() - m.ts.toMillis()) < 60000){
         const delBtn = document.createElement('button');
         delBtn.className = 'lc-del-btn';
@@ -385,7 +713,35 @@
       wrap.appendChild(meta);
       messagesBox.appendChild(wrap);
     });
+
+    if(wasNearBottom){
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+      jumpBottomBtn.style.display = 'none';
+      hasUnseenBelow = false;
+    } else {
+      if(hasNew) hasUnseenBelow = true;
+      messagesBox.scrollTop = prevScrollTop;
+      jumpBottomBtn.style.display = hasUnseenBelow ? 'block' : 'none';
+    }
   }
+
+  jumpBottomBtn.addEventListener('click', function(){
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+    jumpBottomBtn.style.display = 'none';
+    hasUnseenBelow = false;
+  });
+
+  // --- reply bar ---
+  function showReplyBar(){
+    replyAuthorEl.textContent = replyingTo.author;
+    replyTextEl.textContent = replyingTo.image ? '📷 Photo' : replyingTo.text;
+    replyBar.style.display = 'flex';
+    textInput.focus();
+  }
+  replyCancel.addEventListener('click', function(){
+    replyingTo = null;
+    replyBar.style.display = 'none';
+  });
 
   // --- @mention suggestions while typing ---
   textInput.addEventListener('input', function(){
@@ -415,22 +771,54 @@
     }
   });
 
-  // --- image/gif row toggle ---
-  imgToggle.addEventListener('click', function(){
-    imageRow.style.display = imageRow.style.display === 'flex' ? 'none' : 'flex';
-    imageRow.style.gap = '6px';
-    if(imageRow.style.display === 'flex') imageInput.focus();
-  });
-  imageSend.addEventListener('click', sendImage);
-  imageInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') sendImage(); });
+  // --- image via link only (gallery upload removed) ---
+  imageSend.addEventListener('click', function(){ sendImageMessage(imageInput.value.trim()); imageInput.value=''; imageRow.style.display='none'; });
+  imageInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ sendImageMessage(imageInput.value.trim()); imageInput.value=''; imageRow.style.display='none'; } });
 
-  async function sendImage(){
-    const url = imageInput.value.trim();
+  // --- GIF search (Giphy) ---
+  let gifDebounce = null;
+  gifSearch.addEventListener('input', function(){
+    clearTimeout(gifDebounce);
+    const q = gifSearch.value.trim();
+    gifDebounce = setTimeout(function(){ searchGifs(q || 'hi'); }, 450);
+  });
+
+  async function searchGifs(q){
+    if(GIPHY_API_KEY === 'YOUR_GIPHY_API_KEY'){
+      gifHint.textContent = 'Add your GIPHY_API_KEY first (free at developers.giphy.com).';
+      return;
+    }
+    gifHint.textContent = 'Searching...';
+    try{
+      const url = 'https://api.giphy.com/v1/gifs/search?api_key=' + GIPHY_API_KEY +
+                  '&q=' + encodeURIComponent(q) + '&limit=24&rating=g';
+      const res = await fetch(url);
+      const data = await res.json();
+      gifResults.innerHTML = '';
+      (data.data || []).forEach(function(g){
+        const thumb = g.images && g.images.fixed_height_small ? g.images.fixed_height_small.url : null;
+        const full = g.images && g.images.fixed_height ? g.images.fixed_height.url : thumb;
+        if(!thumb) return;
+        const img = document.createElement('img');
+        img.src = thumb;
+        img.addEventListener('click', function(){
+          sendImageMessage(full);
+          gifPanel.style.display = 'none';
+        });
+        gifResults.appendChild(img);
+      });
+      gifHint.textContent = '';
+    } catch(err){
+      gifHint.textContent = "Couldn't load GIFs, please try again.";
+    }
+  }
+
+  async function sendImageMessage(url){
     if(!url || !myName) return;
-    imageInput.value = '';
-    imageRow.style.display = 'none';
-    await addDoc(messagesRef, { author: myName, text: '', image: url, likes: [], ts: serverTimestamp() });
-    await setDoc(doc(usersRef, myName), { name: myName, lastSeen: serverTimestamp() });
+    const payload = { author: myName, text: '', image: url, likes: [], ts: serverTimestamp() };
+    if(replyingTo){ payload.replyTo = replyingTo; replyingTo = null; replyBar.style.display = 'none'; }
+    await addDoc(messagesRef, payload);
+    await setDoc(doc(usersRef, myName), { name: myName, ownerId: clientId, lastSeen: serverTimestamp() });
   }
 
   sendBtn.addEventListener('click', sendMessage);
@@ -444,8 +832,10 @@
     const text = maskBanned(raw);
     textInput.value = '';
     suggestBox.style.display = 'none';
-    await addDoc(messagesRef, { author: myName, text: text, image: null, likes: [], ts: serverTimestamp() });
-    await setDoc(doc(usersRef, myName), { name: myName, lastSeen: serverTimestamp() });
+    const payload = { author: myName, text: text, image: null, likes: [], ts: serverTimestamp() };
+    if(replyingTo){ payload.replyTo = replyingTo; replyingTo = null; replyBar.style.display = 'none'; }
+    await addDoc(messagesRef, payload);
+    await setDoc(doc(usersRef, myName), { name: myName, ownerId: clientId, lastSeen: serverTimestamp() });
   }
 </script>
 
