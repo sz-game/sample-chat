@@ -152,25 +152,45 @@
 
   #lc-form-wrap{ position:relative; background: var(--dark-2); flex-shrink:0; }
 
-  /* ---- Emoji panel with categories ---- */
+  /* ---- Emoji panel: icon-tab categories + search + one continuous scroll ---- */
   #lc-emoji-panel{
     display:none; flex-direction:column; padding: 8px 10px 0;
   }
   #lc-emoji-tabs{
-    display:flex; gap:4px; overflow-x:auto; padding-bottom:6px; flex-shrink:0;
-    scrollbar-width: thin;
+    display:flex; gap:2px; overflow-x:auto; padding-bottom:8px; flex-shrink:0;
+    scrollbar-width: none; border-bottom: 1px solid rgba(255,255,255,0.08);
   }
-  #lc-emoji-tabs::-webkit-scrollbar{ height:4px; }
+  #lc-emoji-tabs::-webkit-scrollbar{ display:none; }
   #lc-emoji-tabs .lc-emoji-tab{
-    flex-shrink:0; background:#2C3B4C; border:none; border-radius:14px; color:var(--text-light);
-    font-size:11px; padding:5px 10px; cursor:pointer; opacity:.65; white-space:nowrap;
+    flex-shrink:0; flex:1; background:none; border:none; color:var(--text-light);
+    font-size:19px; padding:4px 8px 8px; cursor:pointer; opacity:.5;
+    border-bottom: 2px solid transparent; line-height:1;
   }
-  #lc-emoji-tabs .lc-emoji-tab.active{ background: var(--accent); color: var(--accent-ink); opacity:1; font-weight:600; }
-  #lc-emoji-grid{
-    display:grid; grid-template-columns: repeat(8, 1fr); gap:4px; max-height:170px; overflow-y:auto;
+  #lc-emoji-tabs .lc-emoji-tab.active{ opacity:1; border-bottom-color: var(--accent); }
+
+  #lc-emoji-search-row{ padding: 8px 0; flex-shrink:0; }
+  #lc-emoji-search{
+    width:100%; border-radius:18px; border:none; padding:8px 12px;
+    background:#2C3B4C; color:var(--text-light); font-size:12px;
   }
-  #lc-emoji-grid span{ font-size:19px; text-align:center; cursor:pointer; padding:3px; border-radius:6px; }
-  #lc-emoji-grid span:hover{ background:#2C3B4C; }
+  #lc-emoji-search::placeholder{ color:rgba(255,255,255,0.4); }
+
+  #lc-emoji-scroll{
+    max-height:210px; overflow-y:auto; scrollbar-width: thin;
+  }
+  #lc-emoji-scroll::-webkit-scrollbar{ width:5px; }
+  .lc-emoji-section-title{
+    position:sticky; top:0; background: var(--dark-2); color: rgba(255,255,255,0.55);
+    font-size:11px; font-weight:600; padding:4px 2px; z-index:2;
+  }
+  .lc-emoji-section-grid{
+    display:grid; grid-template-columns: repeat(8, 1fr); gap:4px; padding-bottom:6px;
+  }
+  .lc-emoji-section-grid span{ font-size:19px; text-align:center; cursor:pointer; padding:3px; border-radius:6px; }
+  .lc-emoji-section-grid span:hover{ background:#2C3B4C; }
+  #lc-emoji-no-results{
+    color: rgba(255,255,255,0.5); font-size:12px; text-align:center; padding:20px 0; display:none;
+  }
 
   #lc-image-row{ display:none; padding: 8px 10px 0; gap:6px; align-items:center; }
   #lc-image-row input[type=text]{
@@ -270,7 +290,11 @@
 
     <div id="lc-emoji-panel">
       <div id="lc-emoji-tabs"></div>
-      <div id="lc-emoji-grid"></div>
+      <div id="lc-emoji-search-row">
+        <input type="text" id="lc-emoji-search" placeholder="Search emoji">
+      </div>
+      <div id="lc-emoji-scroll"></div>
+      <div id="lc-emoji-no-results">No emoji found</div>
     </div>
 
     <div id="lc-image-row">
@@ -341,18 +365,90 @@
     return PALETTE[h % PALETTE.length];
   }
 
-  // ---- Emoji categories ----
-  const EMOJI_CATEGORIES = {
-    'Smileys': ['😀','😁','😂','🤣','😊','🙂','😉','😍','😘','😜','🤔','😎','🥳','🤩','😴','😅','😇','🥺','😢','😭','😡','😱','🤗','🙃','😏','🥱','😬','🤯','🥵','🥶','🤢'],
-    'People': ['👍','👎','👏','🙏','💪','✌️','🤝','👌','👋','🤙','🤟','🖐️','👊','🙌','💃','🕺','👶','👧','👦','👩','👨','🧑','👵','👴','🧕','👮','👨‍⚕️','👩‍🍳','🧑‍🎓','🧑‍💻'],
-    'Animals': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🦄','🐴','🐝','🦋','🐢','🐍','🦈','🐙','🦀','🐘','🦒','🐪','🦉'],
-    'Food': ['🍏','🍎','🍌','🍉','🍇','🍓','🍒','🍑','🍍','🥑','🍕','🍔','🌭','🍟','🍗','🍩','🍪','🎂','🍫','🍿','☕','🍵','🍺','🍷','🥤','🍦','🍰','🍜','🍣','🍫'],
-    'Activities': ['⚽','🏀','🏈','⚾','🎾','🏐','🏓','🏸','🎱','🎮','🎲','🎯','🎳','🏆','🥇','🎨','🎬','🎤','🎧','🎸','🎉','🎊','🎁','🎈','🏋️','🚴','🏊','⛳','🎿'],
-    'Travel': ['🚗','🚕','🚌','🚓','🚑','🚒','🚀','✈️','🚁','⛵','🚢','🚲','🏖️','🏝️','🏔️','🗽','🗼','🏰','🌋','🌅','🌆','🌃','🚦','🗺️','⛰️','🏕️','🚉','🛣️'],
-    'Objects': ['⌚','📱','💻','⌨️','🖥️','📷','📞','🔋','💡','🔦','💰','💎','🔑','🔒','📌','📎','✂️','🔍','💊','🎁','🛒','📚','✏️','🖊️','📅','🎒','💼'],
-    'Symbols': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','❣️','💕','💯','✅','❌','⭕','❗','❓','♻️','⚠️','🔥','✨','⭐','🔴','🟢','🔵','🟡','💤','🚫'],
-    'Flags': ['🏳️','🏴','🚩','🏁','🇵🇰','🇺🇸','🇬🇧','🇮🇳','🇸🇦','🇦🇪','🇹🇷','🇨🇳','🇯🇵','🇩🇪','🇫🇷','🇨🇦','🇦🇺','🇧🇩','🇮🇩']
-  };
+  // ---- Emoji data: one native-picker-style category list, each emoji
+  // carries a short searchable name. Tabs above use one representative
+  // icon per category (matches the native iOS/Android emoji picker style). ----
+  const EMOJI_CATEGORIES = [
+    { name: 'Smileys & People', icon: '😀', items: [
+      ['😀','grinning'], ['😁','grin'], ['😂','joy laughing crying'], ['🤣','rofl floor laughing'],
+      ['😊','smile blush'], ['🙂','slight smile'], ['😉','wink'], ['😍','heart eyes love'],
+      ['😘','kiss heart'], ['😜','wink tongue'], ['🤔','thinking'], ['😎','cool sunglasses'],
+      ['🥳','party celebrate'], ['🤩','star struck'], ['😴','sleep'], ['😅','sweat smile'],
+      ['😇','angel innocent'], ['🥺','pleading puppy eyes'], ['😢','cry sad'], ['😭','sob crying'],
+      ['😡','angry mad'], ['😱','scream shock'], ['🤗','hug'], ['🙃','upside down'],
+      ['😏','smirk'], ['🥱','yawn tired'], ['😬','grimace'], ['🤯','mind blown'],
+      ['🥵','hot sweating'], ['🥶','cold freezing'], ['🤢','nauseated sick'],
+      ['👍','thumbs up like'], ['👎','thumbs down dislike'], ['👏','clap applause'], ['🙏','pray thanks please'],
+      ['💪','muscle strong'], ['✌️','peace victory'], ['🤝','handshake deal'], ['👌','ok perfect'],
+      ['👋','wave hi bye'], ['🤙','call me shaka'], ['🤟','love you'], ['🖐️','hand five'],
+      ['👊','fist bump punch'], ['🙌','raise hands celebrate'], ['💃','dance woman'], ['🕺','dance man'],
+      ['👶','baby'], ['👧','girl'], ['👦','boy'], ['👩','woman'], ['👨','man'], ['🧑','person'],
+      ['👵','old woman'], ['👴','old man'], ['🧕','woman hijab'], ['👮','police officer'],
+      ['👨\u200d⚕️','doctor'], ['👩\u200d🍳','cook chef'], ['🧑\u200d🎓','student graduate'], ['🧑\u200d💻','developer coder']
+    ]},
+    { name: 'Animals & Nature', icon: '🐻', items: [
+      ['🐶','dog'], ['🐱','cat'], ['🐭','mouse'], ['🐹','hamster'], ['🐰','rabbit bunny'],
+      ['🦊','fox'], ['🐻','bear'], ['🐼','panda'], ['🐨','koala'], ['🐯','tiger'],
+      ['🦁','lion'], ['🐮','cow'], ['🐷','pig'], ['🐸','frog'], ['🐵','monkey'],
+      ['🐔','chicken'], ['🐧','penguin'], ['🦄','unicorn'], ['🐴','horse'], ['🐝','bee'],
+      ['🦋','butterfly'], ['🐢','turtle'], ['🐍','snake'], ['🦈','shark'], ['🐙','octopus'],
+      ['🦀','crab'], ['🐘','elephant'], ['🦒','giraffe'], ['🐪','camel'], ['🦉','owl'],
+      ['🌸','blossom flower'], ['🌺','hibiscus flower'], ['🌹','rose flower'], ['🌻','sunflower'],
+      ['🌷','tulip'], ['🌼','daisy'], ['🌙','moon'], ['🌍','earth globe'], ['⭐','star'],
+      ['✨','sparkles'], ['🔥','fire'], ['🌈','rainbow'], ['☀️','sun'], ['☁️','cloud'],
+      ['❄️','snowflake'], ['💧','droplet water']
+    ]},
+    { name: 'Food & Drink', icon: '☕', items: [
+      ['🍏','green apple'], ['🍎','red apple'], ['🍌','banana'], ['🍉','watermelon'], ['🍇','grapes'],
+      ['🍓','strawberry'], ['🍒','cherries'], ['🍑','peach'], ['🍍','pineapple'], ['🥑','avocado'],
+      ['🍕','pizza'], ['🍔','burger'], ['🌭','hot dog'], ['🍟','fries'], ['🍗','chicken leg'],
+      ['🍩','donut'], ['🍪','cookie'], ['🎂','birthday cake'], ['🍫','chocolate'], ['🍿','popcorn'],
+      ['☕','coffee'], ['🍵','tea'], ['🍺','beer'], ['🍷','wine'], ['🥤','soda drink'],
+      ['🍦','ice cream'], ['🍰','cake slice'], ['🍜','noodles ramen'], ['🍣','sushi']
+    ]},
+    { name: 'Activities', icon: '🏀', items: [
+      ['⚽','soccer football'], ['🏀','basketball'], ['🏈','american football'], ['⚾','baseball'],
+      ['🎾','tennis'], ['🏐','volleyball'], ['🏓','ping pong table tennis'], ['🏸','badminton'],
+      ['🎱','pool billiards'], ['🎮','video game controller'], ['🎲','dice'], ['🎯','dart target'],
+      ['🎳','bowling'], ['🏆','trophy win'], ['🥇','gold medal'], ['🎨','art paint'],
+      ['🎬','movie clapper'], ['🎤','microphone karaoke'], ['🎧','headphones music'], ['🎸','guitar'],
+      ['🎉','party popper'], ['🎊','confetti'], ['🎁','gift present'], ['🎈','balloon'],
+      ['🏋️','weightlifting gym'], ['🚴','cycling bike'], ['🏊','swimming'], ['⛳','golf'], ['🎿','ski']
+    ]},
+    { name: 'Travel & Places', icon: '🚗', items: [
+      ['🚗','car'], ['🚕','taxi'], ['🚌','bus'], ['🚓','police car'], ['🚑','ambulance'],
+      ['🚒','fire truck'], ['🚀','rocket space'], ['✈️','plane airplane'], ['🚁','helicopter'],
+      ['⛵','sailboat'], ['🚢','ship'], ['🚲','bike bicycle'], ['🏖️','beach'], ['🏝️','island'],
+      ['🏔️','mountain'], ['🗽','statue of liberty'], ['🗼','tower'], ['🏰','castle'],
+      ['🌋','volcano'], ['🌅','sunrise'], ['🌆','city sunset'], ['🌃','night city'],
+      ['🚦','traffic light'], ['🗺️','map'], ['⛰️','mountain peak'], ['🏕️','camping tent'],
+      ['🚉','train station'], ['🛣️','road highway']
+    ]},
+    { name: 'Objects', icon: '💡', items: [
+      ['⌚','watch'], ['📱','phone mobile'], ['💻','laptop computer'], ['⌨️','keyboard'],
+      ['🖥️','desktop computer'], ['📷','camera'], ['📞','telephone'], ['🔋','battery'],
+      ['💡','bulb idea light'], ['🔦','flashlight torch'], ['💰','money bag'], ['💎','diamond gem'],
+      ['🔑','key'], ['🔒','lock'], ['📌','pin'], ['📎','paperclip'], ['✂️','scissors'],
+      ['🔍','magnifying search'], ['💊','pill medicine'], ['🛒','shopping cart'], ['📚','books'],
+      ['✏️','pencil'], ['🖊️','pen'], ['📅','calendar'], ['🎒','backpack'], ['💼','briefcase work']
+    ]},
+    { name: 'Symbols', icon: '🔣', items: [
+      ['❤️','red heart love'], ['🧡','orange heart'], ['💛','yellow heart'], ['💚','green heart'],
+      ['💙','blue heart'], ['💜','purple heart'], ['🖤','black heart'], ['🤍','white heart'],
+      ['💔','broken heart'], ['❣️','heart exclamation'], ['💕','two hearts'], ['💯','hundred perfect'],
+      ['✅','check done'], ['❌','cross wrong'], ['⭕','circle'], ['❗','exclamation'],
+      ['❓','question mark'], ['♻️','recycle'], ['⚠️','warning'], ['🔥','fire hot'],
+      ['✨','sparkles'], ['⭐','star'], ['🔴','red circle'], ['🟢','green circle'],
+      ['🔵','blue circle'], ['🟡','yellow circle'], ['💤','sleep zzz'], ['🚫','forbidden no']
+    ]},
+    { name: 'Flags', icon: '🏁', items: [
+      ['🏳️','white flag surrender'], ['🏴','black flag'], ['🚩','red flag'], ['🏁','checkered flag finish'],
+      ['🇵🇰','pakistan'], ['🇺🇸','usa america'], ['🇬🇧','uk britain'], ['🇮🇳','india'],
+      ['🇸🇦','saudi arabia'], ['🇦🇪','uae emirates'], ['🇹🇷','turkey'], ['🇨🇳','china'],
+      ['🇯🇵','japan'], ['🇩🇪','germany'], ['🇫🇷','france'], ['🇨🇦','canada'],
+      ['🇦🇺','australia'], ['🇧🇩','bangladesh'], ['🇮🇩','indonesia']
+    ]}
+  ];
 
   const launcher = document.getElementById('lc-launcher');
   const badge = document.getElementById('lc-badge');
@@ -373,7 +469,9 @@
   const emojiToggle = document.getElementById('lc-emoji-toggle');
   const emojiPanel = document.getElementById('lc-emoji-panel');
   const emojiTabs = document.getElementById('lc-emoji-tabs');
-  const emojiGrid = document.getElementById('lc-emoji-grid');
+  const emojiScroll = document.getElementById('lc-emoji-scroll');
+  const emojiSearchInput = document.getElementById('lc-emoji-search');
+  const emojiNoResults = document.getElementById('lc-emoji-no-results');
 
   const imgToggle = document.getElementById('lc-img-toggle');
   const imageRow = document.getElementById('lc-image-row');
@@ -391,32 +489,103 @@
   const replyTextEl = document.getElementById('lc-reply-text');
   const replyCancel = document.getElementById('lc-reply-cancel');
 
-  // ---- build the categorized emoji picker ----
-  function renderEmojiGrid(catName){
-    emojiGrid.innerHTML = '';
-    EMOJI_CATEGORIES[catName].forEach(function(em){
-      const s = document.createElement('span');
-      s.textContent = em;
-      s.addEventListener('click', function(){
-        textInput.value += em;
-        textInput.focus();
-      });
-      emojiGrid.appendChild(s);
-    });
-  }
-  Object.keys(EMOJI_CATEGORIES).forEach(function(catName, idx){
+  // ---- build the single-scroll emoji picker: one tab per category (icon
+  // only, like the native picker), all categories rendered as sections in
+  // one scrolling list, and a scroll-spy that highlights whichever tab's
+  // section is currently at the top of the visible area. ----
+  let emojiIgnoreScroll = false; // true while we're auto-scrolling from a tab click
+
+  EMOJI_CATEGORIES.forEach(function(cat, idx){
     const tab = document.createElement('button');
     tab.type = 'button';
     tab.className = 'lc-emoji-tab' + (idx === 0 ? ' active' : '');
-    tab.textContent = catName;
+    tab.textContent = cat.icon;
+    tab.title = cat.name;
+    tab.dataset.cat = cat.name;
     tab.addEventListener('click', function(){
-      emojiTabs.querySelectorAll('.lc-emoji-tab').forEach(function(t){ t.classList.remove('active'); });
-      tab.classList.add('active');
-      renderEmojiGrid(catName);
+      emojiSearchInput.value = '';
+      renderEmojiSections('');
+      const section = emojiScroll.querySelector('[data-section="' + CSS.escape(cat.name) + '"]');
+      if(section){
+        emojiIgnoreScroll = true;
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActiveEmojiTab(cat.name);
+        setTimeout(function(){ emojiIgnoreScroll = false; }, 500);
+      }
     });
     emojiTabs.appendChild(tab);
   });
-  renderEmojiGrid(Object.keys(EMOJI_CATEGORIES)[0]);
+
+  function setActiveEmojiTab(catName){
+    emojiTabs.querySelectorAll('.lc-emoji-tab').forEach(function(t){
+      t.classList.toggle('active', t.dataset.cat === catName);
+    });
+  }
+
+  function renderEmojiSections(filterRaw){
+    const filter = filterRaw.trim().toLowerCase();
+    emojiScroll.innerHTML = '';
+    let anyMatch = false;
+
+    EMOJI_CATEGORIES.forEach(function(cat){
+      const matches = filter
+        ? cat.items.filter(function(it){ return it[1].indexOf(filter) !== -1; })
+        : cat.items;
+      if(!matches.length) return;
+      anyMatch = true;
+
+      const section = document.createElement('div');
+      section.dataset.section = cat.name;
+
+      const title = document.createElement('div');
+      title.className = 'lc-emoji-section-title';
+      title.textContent = cat.name;
+      section.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'lc-emoji-section-grid';
+      matches.forEach(function(it){
+        const s = document.createElement('span');
+        s.textContent = it[0];
+        s.title = it[1];
+        s.addEventListener('click', function(){
+          textInput.value += it[0];
+          textInput.focus();
+        });
+        grid.appendChild(s);
+      });
+      section.appendChild(grid);
+      emojiScroll.appendChild(section);
+    });
+
+    emojiNoResults.style.display = anyMatch ? 'none' : 'block';
+    // while searching, no single category applies - clear the tab highlight;
+    // restoring focus to a category (via tab click) resets the search too.
+    if(filter) emojiTabs.querySelectorAll('.lc-emoji-tab').forEach(t => t.classList.remove('active'));
+    else setActiveEmojiTab(EMOJI_CATEGORIES[0].name);
+  }
+  renderEmojiSections('');
+
+  let emojiSearchDebounce = null;
+  emojiSearchInput.addEventListener('input', function(){
+    clearTimeout(emojiSearchDebounce);
+    const val = emojiSearchInput.value;
+    emojiSearchDebounce = setTimeout(function(){ renderEmojiSections(val); }, 120);
+  });
+
+  // scroll-spy: whichever section's top has scrolled past (or is closest
+  // to) the top of the scroll box is the "active" one, matching how native
+  // emoji pickers keep the current category tab lit while you scroll.
+  emojiScroll.addEventListener('scroll', function(){
+    if(emojiIgnoreScroll) return;
+    if(emojiSearchInput.value.trim()) return; // no single category while searching
+    const sections = emojiScroll.querySelectorAll('[data-section]');
+    let current = null;
+    sections.forEach(function(sec){
+      if(sec.offsetTop - emojiScroll.scrollTop <= 28) current = sec;
+    });
+    if(current) setActiveEmojiTab(current.dataset.section);
+  });
 
   function hideAllPanels(){
     emojiPanel.style.display = 'none';
@@ -462,25 +631,11 @@
   let lastSnapshotDocs = [];
   let replyingTo = null; // { author, text, image }
 
-  // ---- FIX 1: highlight state persists across re-renders ----
-  // Previously the highlight class was added directly to a DOM node, but
-  // renderMessages() wipes and rebuilds the whole message list on every
-  // Firestore update (new message, like, or the 5s refresh tick). If any of
-  // those fired during the 1.3s flash window, the highlighted element got
-  // thrown away and replaced with a fresh one that had no highlight class -
-  // which is why the flash seemed to randomly fail. Now we track *which*
-  // message should be highlighted and re-apply the class every time we render.
+  // highlight state persists across re-renders (see renderMessages/jumpToMessage)
   let highlightedMsgId = null;
   let highlightTimeout = null;
 
-  // ---- FIX 2: "new messages" indicator persists across re-renders ----
-  // The pill used to only show up during the exact onSnapshot call where a
-  // message was added (hasNew === true). But renderMessages() is also called
-  // by the 5s interval and by like/unlike updates with no argument, which
-  // reset hasNew to falsy and hid the pill again almost immediately - so
-  // clicking it often did nothing because it had already vanished. Now we
-  // keep a persistent flag that only clears once the user is actually back
-  // near the bottom.
+  // "new messages" indicator persists across re-renders until user scrolls back down
   let hasUnseenBelow = false;
 
   if(myName){ showChat(); }
@@ -584,9 +739,6 @@
   }
 
   // WhatsApp-style jump: scroll the original message into view and flash it.
-  // We remember which id should be highlighted (highlightedMsgId) instead of
-  // only touching the live DOM node, so the flash survives any re-render
-  // that happens in the next 1.3s (new message, like, or the 5s tick).
   function jumpToMessage(targetId){
     highlightedMsgId = targetId;
     if(highlightTimeout) clearTimeout(highlightTimeout);
@@ -596,8 +748,6 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.classList.add('lc-highlight');
     }
-    // if el doesn't exist yet (message too old, outside the loaded 150 limit)
-    // nothing to scroll to, but we still clear the pending highlight below.
 
     highlightTimeout = setTimeout(function(){
       highlightedMsgId = null;
@@ -606,12 +756,6 @@
     }, 1300);
   }
 
-  // Smart auto-scroll: only jump to the newest message if the user is
-  // already near the bottom (or it's the first load). If they've scrolled
-  // up to read older messages, their position is preserved and a
-  // "New messages" button appears instead of yanking them down - and it now
-  // stays visible (and clickable) until they actually scroll back down,
-  // instead of disappearing on the next unrelated re-render.
   function renderMessages(hasNew){
     const distanceFromBottom = messagesBox.scrollHeight - messagesBox.scrollTop - messagesBox.clientHeight;
     const wasNearBottom = distanceFromBottom < 120 || messagesBox.scrollHeight === 0;
@@ -647,8 +791,7 @@
       if(m.replyTo){
         const quoteEl = bubble.querySelector('.lc-quote');
         quoteEl.querySelector('.lc-quote-author').textContent = m.replyTo.author;
-        quoteEl.querySelector('.lc-quote-text').textContent = m.replyTo.image ? '📷 Photo' : m.replyTo.text;
-        // WhatsApp-style: tapping the quoted preview jumps to and highlights the original message
+        quoteEl.querySelector('.lc-quote-text').textContent = m.replyTo.image ? '📷 GIF' : m.replyTo.text;
         if(m.replyTo.id){
           quoteEl.addEventListener('click', function(ev){
             ev.stopPropagation();
